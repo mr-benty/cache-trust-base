@@ -1,0 +1,11 @@
+name: artifacts
+on: { workflow_dispatch: {}, push: { branches: [main] } }
+jobs:
+  up:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "SECRET-ARTIFACT-CONTENT-${{ github.run_id }}" > secret.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: secret-${{ github.run_id }}
+          path: secret.txt
