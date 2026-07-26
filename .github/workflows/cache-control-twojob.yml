@@ -1,0 +1,23 @@
+name: cache-control-twojob
+on: workflow_dispatch
+jobs:
+  save:
+    runs-on: ubuntu-latest
+    steps:
+      - run: mkdir -p .cache-test && echo "CANARY-TWO-JOB-$(date +%s)" > .cache-test/secret.txt
+      - uses: actions/cache/save@v4
+        with:
+          path: .cache-test
+          key: twojob-canary-v1
+  restore:
+    needs: save
+    runs-on: ubuntu-latest
+    steps:
+      - id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache-test
+          key: twojob-canary-v1
+      - run: |
+          echo "Hit: ${{ steps.cache.outputs.cache-hit }}"
+          cat .cache-test/secret.txt 2>/dev/null && echo "CONTROL PASSED" || echo "CONTROL FAILED"
