@@ -1,0 +1,16 @@
+name: cache-xrepo-save
+on: workflow_dispatch
+jobs:
+  save:
+    runs-on: ubuntu-latest
+    steps:
+      - name: create canary file
+        run: |
+          mkdir -p .cache-test
+          echo "CANARY-$(date +%s)-from-cache-trust-base" > .cache-test/secret.txt
+          echo "Saved canary: $(cat .cache-test/secret.txt)"
+      - name: save cache with fixed key
+        uses: actions/cache/save@v4
+        with:
+          path: .cache-test
+          key: xrepo-canary-v1
