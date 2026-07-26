@@ -1,0 +1,19 @@
+name: cache-crossrun-control
+on: workflow_dispatch
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache-test
+          key: twojob-canary-v1
+      - run: |
+          echo "cache-hit=${{ steps.cache.outputs.cache-hit }}"
+          if [ -f .cache-test/secret.txt ]; then
+            echo "CROSS-RUN CONTROL PASSED"
+            cat .cache-test/secret.txt
+          else
+            echo "CROSS-RUN CONTROL FAILED — harness broken"
+          fi
