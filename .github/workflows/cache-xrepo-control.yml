@@ -1,0 +1,21 @@
+name: cache-xrepo-control
+on: workflow_dispatch
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    steps:
+      - name: same-repo cache restore (positive control)
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache-test
+          key: xrepo-canary-v1
+      - name: report result
+        run: |
+          echo "Cache hit: ${{ steps.cache.outputs.cache-hit }}"
+          if [ -f .cache-test/secret.txt ]; then
+            echo "POSITIVE CONTROL PASSED - same-repo cache works"
+            echo "Content: $(cat .cache-test/secret.txt)"
+          else
+            echo "POSITIVE CONTROL FAILED - cache not found in same repo"
+          fi
