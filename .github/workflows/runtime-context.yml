@@ -113,3 +113,16 @@ jobs:
               const a=j.value?.[0] || j
               core.info('LEGACY_ARTIFACT_SAFE='+JSON.stringify({label,status:r.status,bytes:t.length,message:j.message||j.msg||null,name:a.name||null,containerId:a.resource?.data||a.containerId||null,resourceType:a.resource?.type||null,downloadUrlPresent:!!(a.resource?.downloadUrl||a.downloadUrl)}))
             }
+
+            const workflowReads = {
+              workflow_artifacts_same:`_apis/pipelines/workflows/33045645344/artifacts?artifactName=${encodeURIComponent('secret-33045645344')}&api-version=6.0-preview.1`,
+              workflow_artifacts_other_private:`_apis/pipelines/workflows/30727101970/artifacts?artifactName=privart&api-version=6.0-preview.1`,
+              workflow_artifacts_garbage:`_apis/pipelines/workflows/99999999999/artifacts?artifactName=privart&api-version=6.0-preview.1`,
+              runinfo_self:`${zero}/_apis/pipelines/runinfo/${encodeURIComponent(claims.orch_id)}?api-version=6.0-preview.1`,
+              runinfo_self_noproject:`_apis/pipelines/runinfo/${encodeURIComponent(claims.orch_id)}?api-version=6.0-preview.1`
+            }
+            for (const [label,path] of Object.entries(workflowReads)) {
+              const r=await fetch(new URL(path,runtime),{headers:{authorization:`Bearer ${token}`,accept:'application/json'}})
+              const t=await r.text();let j={};try{j=JSON.parse(t)}catch{};const arr=Array.isArray(j.value)?j.value:[];const a=arr[0]||j
+              core.info('WORKFLOWREAD_SAFE='+JSON.stringify({label,status:r.status,bytes:t.length,message:j.message||j.msg||null,count:arr.length,id:a.id||null,name:a.name||null,resourceType:a.resource?.type||null,downloadUrlPresent:!!(a.resource?.downloadUrl||a.downloadUrl),repositoryId:a.repositoryId||null,runId:a.runId||null}))
+            }
