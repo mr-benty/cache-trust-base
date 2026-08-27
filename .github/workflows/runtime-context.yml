@@ -20,7 +20,7 @@ jobs:
             const safeUrl = u => { const x = new URL(u); return {host:x.hostname, path:x.pathname} }
             core.info('RUNTIME_SAFE=' + JSON.stringify({
               runtime:safeUrl(runtime), results:results ? safeUrl(results) : null,
-              claims:Object.fromEntries(['scp','repository_id','owner_id','plan_id','job_id','run_id','runner_id','aud','iss'].map(k => [k,claims[k] ?? null]))
+              claims:Object.fromEntries(['scp','repository_id','owner_id','plan_id','orch_id','job_id','run_id','runner_id','aud','iss'].map(k => [k,claims[k] ?? null]))
             }))
             const env = {}
             for (const [k,v] of Object.entries(process.env)) {
@@ -52,4 +52,19 @@ jobs:
               const t = await r.text(); let j = {}; try { j=JSON.parse(t) } catch {}
               const value = Array.isArray(j.value) ? j.value : Array.isArray(j.records) ? j.records : []
               core.info('PIPELINE_SAFE=' + JSON.stringify({label,status:r.status,bytes:t.length,message:j.message || j.msg || null,id:j.id || null,recordCount:value.length,recordNames:value.slice(0,5).map(x=>x.name || x.type || null)}))
+            }
+            if (claims.orch_id && claims.orch_id !== claims.plan_id) {
+              for (const [label,suffix] of Object.entries({
+                orch_plan:'',
+                orch_timelines:'/timelines',
+                orch_logs:'/logs',
+                orch_timeline_self:`/timelines/${claims.orch_id}`,
+                orch_records_self:`/timelines/${claims.orch_id}/records`
+              })) {
+                const path = `${zero}/_apis/distributedtask/hubs/Actions/plans/${claims.orch_id}${suffix}?includeRecords=true&api-version=6.0-preview.1`
+                const r = await fetch(new URL(path,runtime), {headers:{authorization:`Bearer ${token}`,accept:'application/json'}})
+                const t=await r.text(); let j={}; try{j=JSON.parse(t)}catch{}
+                const value=Array.isArray(j.value)?j.value:Array.isArray(j.records)?j.records:[]
+                core.info('PIPELINE_SAFE='+JSON.stringify({label,status:r.status,bytes:t.length,message:j.message||j.msg||null,id:j.id||null,recordCount:value.length,recordNames:value.slice(0,5).map(x=>x.name||x.type||null)}))
+              }
             }
