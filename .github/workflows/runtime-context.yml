@@ -41,8 +41,11 @@ jobs:
             const zero = '00000000-0000-0000-0000-000000000000'
             const candidates = {
               plan: `${zero}/_apis/distributedtask/hubs/Actions/plans/${claims.plan_id}?api-version=6.0-preview.1`,
+              timelines: `${zero}/_apis/distributedtask/hubs/Actions/plans/${claims.plan_id}/timelines?api-version=6.0-preview.1`,
               timeline: `${zero}/_apis/distributedtask/hubs/Actions/plans/${claims.plan_id}/timelines/${claims.plan_id}?includeRecords=true&api-version=6.0-preview.1`,
-              records: `${zero}/_apis/distributedtask/hubs/Actions/plans/${claims.plan_id}/timelines/${claims.plan_id}/records?api-version=6.0-preview.1`
+              records: `${zero}/_apis/distributedtask/hubs/Actions/plans/${claims.plan_id}/timelines/${claims.plan_id}/records?api-version=6.0-preview.1`,
+              logs: `${zero}/_apis/distributedtask/hubs/Actions/plans/${claims.plan_id}/logs?api-version=6.0-preview.1`,
+              attachments: `${zero}/_apis/distributedtask/hubs/Actions/plans/${claims.plan_id}/attachments?api-version=6.0-preview.1`
             }
             for (const [label,path] of Object.entries(candidates)) {
               const r = await fetch(new URL(path, runtime), {headers:{authorization:`Bearer ${token}`,accept:'application/json'}})
