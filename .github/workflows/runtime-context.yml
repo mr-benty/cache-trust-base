@@ -115,6 +115,7 @@ jobs:
             }
 
             const workflowReads = {
+              workflow_artifacts_current:`_apis/pipelines/workflows/${claims.run_id}/artifacts?api-version=6.0-preview.1`,
               workflow_artifacts_same:`_apis/pipelines/workflows/33045645344/artifacts?artifactName=${encodeURIComponent('secret-33045645344')}&api-version=6.0-preview.1`,
               workflow_artifacts_other_private:`_apis/pipelines/workflows/30727101970/artifacts?artifactName=privart&api-version=6.0-preview.1`,
               workflow_artifacts_garbage:`_apis/pipelines/workflows/99999999999/artifacts?artifactName=privart&api-version=6.0-preview.1`,
