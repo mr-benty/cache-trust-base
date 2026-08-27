@@ -97,3 +97,17 @@ jobs:
               const t=await r.text();let j={};try{j=JSON.parse(t)}catch{};const value=Array.isArray(j.value)?j.value:Array.isArray(j.records)?j.records:Array.isArray(j.logs)?j.logs:[]
               core.info('GENERICREAD_SAFE='+JSON.stringify({label,status:r.status,bytes:t.length,message:j.message||j.msg||null,id:j.id||null,count:value.length,names:value.slice(0,5).map(x=>x.name||x.type||x.id||null)}))
             }
+
+            // Legacy Actions Storage/Pipelines API: definition id is a dummy 1 and GitHub run id
+            // is caller-supplied. This is distinct from the v4 Results-service backend GUID check.
+            const legacyReads = {
+              same_repo:`${zero}/_apis/pipelines/1/runs/33045645344/artifacts?artifactName=${encodeURIComponent('secret-33045645344')}&api-version=6.0-preview.1`,
+              other_private_repo:`${zero}/_apis/pipelines/1/runs/30727101970/artifacts?artifactName=privart&api-version=6.0-preview.1`,
+              garbage_run:`${zero}/_apis/pipelines/1/runs/99999999999/artifacts?artifactName=privart&api-version=6.0-preview.1`
+            }
+            for (const [label,path] of Object.entries(legacyReads)) {
+              const r=await fetch(new URL(path,runtime),{headers:{authorization:`Bearer ${token}`,accept:'application/json'}})
+              const t=await r.text();let j={};try{j=JSON.parse(t)}catch{}
+              const a=j.value?.[0] || j
+              core.info('LEGACY_ARTIFACT_SAFE='+JSON.stringify({label,status:r.status,bytes:t.length,message:j.message||j.msg||null,name:a.name||null,containerId:a.resource?.data||a.containerId||null,resourceType:a.resource?.type||null,downloadUrlPresent:!!(a.resource?.downloadUrl||a.downloadUrl)}))
+            }
