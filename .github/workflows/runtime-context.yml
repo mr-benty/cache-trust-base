@@ -89,6 +89,8 @@ jobs:
               plan_artifacts:`_apis/pipelines/plans/${encodeURIComponent(claims.orch_id)}/artifacts?api-version=6.0-preview.1`,
               summary:`_apis/pipelines/plans/${claims.plan_id}/summary?api-version=6.0-preview.1`,
               signed_summary:`_apis/pipelines/plans/${claims.plan_id}/signedsummary?api-version=6.0-preview.1`,
+              jobs:`_apis/pipelines/plans/${claims.plan_id}/jobs?api-version=6.0-preview.1`,
+              orch_jobs:`_apis/pipelines/plans/${encodeURIComponent(claims.orch_id)}/jobs?api-version=6.0-preview.1`,
               job:`_apis/pipelines/plans/${claims.plan_id}/jobs/${claims.job_id}?api-version=6.0-preview.1`,
               steps:`_apis/pipelines/plans/${claims.plan_id}/jobs/${claims.job_id}/steps?api-version=6.0-preview.1`
             }
