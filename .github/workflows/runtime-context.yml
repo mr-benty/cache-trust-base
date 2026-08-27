@@ -81,3 +81,19 @@ jobs:
                 core.info('PIPELINE_SAFE='+JSON.stringify({label,status:r.status,bytes:t.length,message:j.message||j.msg||null,id:j.id||null,recordCount:value.length,recordNames:value.slice(0,5).map(x=>x.name||x.type||null)}))
               }
             }
+
+            // Actions.GenericRead is consumed by the Pipelines service, not the DistributedTask
+            // timeline routes above. Exercise every read-shaped location exposed by ConnectionData.
+            const pipeReads = {
+              plan_logs:`_apis/pipelines/plans/${encodeURIComponent(claims.orch_id)}/logs?api-version=6.0-preview.1`,
+              plan_artifacts:`_apis/pipelines/plans/${encodeURIComponent(claims.orch_id)}/artifacts?api-version=6.0-preview.1`,
+              summary:`_apis/pipelines/plans/${claims.plan_id}/summary?api-version=6.0-preview.1`,
+              signed_summary:`_apis/pipelines/plans/${claims.plan_id}/signedsummary?api-version=6.0-preview.1`,
+              job:`_apis/pipelines/plans/${claims.plan_id}/jobs/${claims.job_id}?api-version=6.0-preview.1`,
+              steps:`_apis/pipelines/plans/${claims.plan_id}/jobs/${claims.job_id}/steps?api-version=6.0-preview.1`
+            }
+            for (const [label,path] of Object.entries(pipeReads)) {
+              const r=await fetch(new URL(path,runtime),{headers:{authorization:`Bearer ${token}`,accept:'application/json'}})
+              const t=await r.text();let j={};try{j=JSON.parse(t)}catch{};const value=Array.isArray(j.value)?j.value:Array.isArray(j.records)?j.records:Array.isArray(j.logs)?j.logs:[]
+              core.info('GENERICREAD_SAFE='+JSON.stringify({label,status:r.status,bytes:t.length,message:j.message||j.msg||null,id:j.id||null,count:value.length,names:value.slice(0,5).map(x=>x.name||x.type||x.id||null)}))
+            }
