@@ -47,6 +47,10 @@ jobs:
               logs: `${zero}/_apis/distributedtask/hubs/Actions/plans/${claims.plan_id}/logs?api-version=6.0-preview.1`,
               attachments: `${zero}/_apis/distributedtask/hubs/Actions/plans/${claims.plan_id}/attachments?api-version=6.0-preview.1`
             }
+            candidates.lower_plan = `${zero}/_apis/distributedtask/hubs/actions/plans/${claims.plan_id}?api-version=6.0-preview.1`
+            candidates.lower_timeline = `${zero}/_apis/distributedtask/hubs/actions/plans/${claims.plan_id}/timelines/${claims.plan_id}?includeRecords=true&api-version=6.0-preview.1`
+            candidates.lower_records = `${zero}/_apis/distributedtask/hubs/actions/plans/${claims.plan_id}/timelines/${claims.plan_id}/records?api-version=6.0-preview.1`
+            candidates.lower_logs = `${zero}/_apis/distributedtask/hubs/actions/plans/${claims.plan_id}/logs?api-version=6.0-preview.1`
             for (const [label,path] of Object.entries(candidates)) {
               const r = await fetch(new URL(path, runtime), {headers:{authorization:`Bearer ${token}`,accept:'application/json'}})
               const t = await r.text(); let j = {}; try { j=JSON.parse(t) } catch {}
