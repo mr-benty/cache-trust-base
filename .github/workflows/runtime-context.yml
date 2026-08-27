@@ -1,0 +1,40 @@
+name: runtime-context-safe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Capture safe runtime scope and service routes
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
+        with:
+          script: |
+            const token = process.env.ACTIONS_RUNTIME_TOKEN
+            const runtime = process.env.ACTIONS_RUNTIME_URL
+            const results = process.env.ACTIONS_RESULTS_URL
+            if (!token || !runtime) throw new Error(`runtime instrument absent token=${!!token} url=${!!runtime}`)
+            const dec = s => JSON.parse(Buffer.from(s.split('.')[1], 'base64url').toString('utf8'))
+            const claims = dec(token)
+            const safeUrl = u => { const x = new URL(u); return {host:x.hostname, path:x.pathname} }
+            core.info('RUNTIME_SAFE=' + JSON.stringify({
+              runtime:safeUrl(runtime), results:results ? safeUrl(results) : null,
+              claims:Object.fromEntries(['scp','repository_id','owner_id','plan_id','job_id','run_id','runner_id','aud','iss'].map(k => [k,claims[k] ?? null]))
+            }))
+            const env = {}
+            for (const [k,v] of Object.entries(process.env)) {
+              if (/(PLAN|TIMELINE|PROJECT|SCOPE|JOBID|JOB_ID|COLLECTION)/i.test(k) && /^[A-Za-z0-9_:\/.@-]{0,300}$/.test(v || '')) env[k]=v
+            }
+            core.info('RUNTIME_ENV_SAFE=' + JSON.stringify(env))
+
+            const url = new URL('_apis/connectionData?connectOptions=1&lastChangeId=-1&lastChangeId64=-1', runtime)
+            const res = await fetch(url, {headers:{authorization:`Bearer ${token}`,accept:'application/json'}})
+            const text = await res.text()
+            let body = {}; try { body = JSON.parse(text) } catch {}
+            const wanted = new Set(['83597576-cc2c-453c-bea6-2882ae6a1653','fc825784-c92a-4299-9221-998a02d1b54f','27d7f831-88c1-4719-8ca1-6a061dad90eb'])
+            const defs = (body.locationServiceData?.serviceDefinitions || body.serviceDefinitions || [])
+              .filter(x => wanted.has(String(x.identifier || '').toLowerCase()))
+              .map(x => ({identifier:x.identifier,displayName:x.displayName,relativePath:x.relativePath,serviceType:x.serviceType}))
+            core.info('CONNECTION_SAFE=' + JSON.stringify({status:res.status,bytes:text.length,authenticatedUserId:body.authenticatedUser?.id || null,instanceId:body.instanceId || null,defs}))
+
